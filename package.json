@@ -1,0 +1,10 @@
+{
+  "name": "pluma_duino",
+  "description": "A pluma component. It provides a bridge between the pluma app and the arduino board.",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "johnny-five": "~0.7.3",
+    "socket.io": "latest"
+  }
+}
