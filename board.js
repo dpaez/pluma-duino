@@ -3,7 +3,8 @@
 var five = require('johnny-five'),
     sio = require('socket.io'),
     board = new five.Board(),
-    io = sio.listen(8080);
+    io = sio.listen(8080),
+    component;
 
 var _boardSetup = function(board, options){
   // pinMode setup
@@ -29,21 +30,17 @@ var _boardSetup = function(board, options){
   This should be part of a different module, like board.types.js
  */
 var boardTypes = {
-  motor: function( options ){
-    options = options || {};
-    return new five.Motor( options );
+  motor: function(){
+    return five.Motor;
   },
-  servo: function( options ){
-    options = options || {};
-    return new five.Servo( options );
+  servo: function(){
+    return five.Servo;
   },
-  led: function( options ){
-    options = options || {};
-    return new five.Led( options );
+  led: function(){
+    return five.Led;
   },
-  lcd: function( options ){
-    options = options || {};
-    return new five.LCD( options );
+  lcd: function(){
+    return five.LCD;
   }
 };
 
@@ -52,28 +49,57 @@ var boardTypes = {
  * @param  {String} type [a valid component type]
  * @return {Object}      [An Arduino component instance. ]
  */
-var _create = function( componentType ){
+var _create = function( componentType, options ){
+  options = options || {};
   if ( boardTypes.hasOwnProperty(componentType) ){
-    return boardTypes[componentType];
+    return new boardTypes[componentType](options);
   }
   return undefined;
 };
 
+var _init = function(){
+  io.sockets.on('connection', function ( socket ) {
+    socket.broadcast.emit('plumaduino:component_ready');
+  });
+};
+
+var do_default = function( data ){
+  // hardc0de: every kind of component should have a do_default action
+  component.clear();
+  component.print( ">> " );
+  component.setCursor( 0, 1 );
+  component.print( data );
+};
+
 board.on('ready', function() {
 
-  // hardcode: testing purposes only
-  _boardSetup(this, { pinMode: {10: [five.Pin.OUTPUT, five.Pin.INPUT]} });
+  // component = _create( 'lcd' );
+  
+  io.sockets.on('connection', function( socket ){
 
-  var component = _create('led');
+    socket.on('plumaduino:board_status', function(){
+      socket.emit( 'plumaduino:board_ready' );
+    });
 
-  // TODO: component.on('ready', init());
+    socket.on('plumaduino:board_setup', function( config ){
+      // hardc0de: testing purposes only
+      _boardSetup( board, { pinMode: {10: [five.Pin.OUTPUT, five.Pin.INPUT]} } );
+    });
 
+    socket.on('plumaduino:create_component', function( type ){
+      var options = {
+        pins: [ 8, 9, 4, 5, 6, 7 ],
+        rows: 2,
+        cols: 16,
+      };
+      component = _create( type, options );
+      component.on( 'ready', _init() );
+    });
 
-  // Create some J5 HW module
-  // e.g: var motor = new five.motor()
-  // And pass it selected module pins as options
-  // Abstract this creation process and exposes it
-  // through websockets so new modules can be
-  // attached to board on-the-fly via Pluma app.
+    socket.on('plumaduino:execute_default', function( data ){
+      do_default( data );    
+    });
+
+  });
 
 });
