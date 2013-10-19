@@ -6,7 +6,7 @@ var five = require('johnny-five'),
     io = sio.listen(8080),
     component;
 
-var _boardSetup = function(board, options){
+function _boardSetup(board, options){
   // pinMode setup
   if ( (options.pinMode) && (typeof options.pinMode === 'object') ){
     for ( var pin in options.pinMode ){
@@ -24,23 +24,23 @@ var _boardSetup = function(board, options){
   }
   // do more setup below
   // ...
-};
+}
 
 /*
   This should be part of a different module, like board.types.js
  */
 var boardTypes = {
-  motor: function(){
-    return five.Motor;
+  'motor': function(){
+    return five.Motor();
   },
-  servo: function(){
-    return five.Servo;
+  'servo': function(){
+    return five.Servo();
   },
-  led: function(){
-    return five.Led;
+  'led': function(){
+    return five.Led();
   },
-  lcd: function(){
-    return five.LCD;
+  'lcd': function(){
+    return five.LCD();
   }
 };
 
@@ -49,32 +49,40 @@ var boardTypes = {
  * @param  {String} type [a valid component type]
  * @return {Object}      [An Arduino component instance. ]
  */
-var _create = function( componentType, options ){
-  options = options || {};
+function _create( componentType, options ){
   if ( boardTypes.hasOwnProperty(componentType) ){
-    return new boardTypes[componentType](options);
+    return new boardTypes[componentType]( options );
   }
   return undefined;
-};
+}
 
-var _init = function(){
-  io.sockets.on('connection', function ( socket ) {
-    socket.broadcast.emit('plumaduino:component_ready');
-  });
-};
+function _getComponent( componentType, options ){
+  options = options || {};
+  switch( componentType ){
+    case 'motor':
+      return new five.Motor( options );
+      break;
+    case 'lcd':
+      return new five.LCD( options );
+      break;
+    default:
+      return undefined;
+      break;
+  }
+}
 
-var do_default = function( data ){
+function do_default( data ){
   // hardc0de: every kind of component should have a do_default action
   component.clear();
-  component.print( ">> " );
+  component.print( '>> ' );
   component.setCursor( 0, 1 );
   component.print( data );
-};
+}
 
 board.on('ready', function() {
 
   // component = _create( 'lcd' );
-  
+
   io.sockets.on('connection', function( socket ){
 
     socket.on('plumaduino:board_status', function(){
@@ -92,12 +100,14 @@ board.on('ready', function() {
         rows: 2,
         cols: 16,
       };
-      component = _create( type, options );
-      component.on( 'ready', _init() );
+
+      component = _getComponent( type, options );
+
+      component.on( 'ready', function(){ socket.emit( 'plumaduino:component_ready', {componentType: type} ); } );
     });
 
     socket.on('plumaduino:execute_default', function( data ){
-      do_default( data );    
+      do_default( data );
     });
 
   });
