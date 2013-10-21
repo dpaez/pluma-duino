@@ -56,7 +56,7 @@ function _create( componentType, options ){
   return undefined;
 }
 
-function _getComponent( componentType, options ){
+function _getNewComponent( componentType, options ){
   options = options || {};
   switch( componentType ){
     case 'motor':
@@ -101,13 +101,24 @@ board.on('ready', function() {
         cols: 16,
       };
 
-      component = _getComponent( type, options );
+      component = _getNewComponent( type, options );
 
       component.on( 'ready', function(){ socket.emit( 'plumaduino:component_ready', {componentType: type} ); } );
     });
 
     socket.on('plumaduino:execute_default', function( data ){
       do_default( data );
+    });
+
+    socket.on('plumaduino:component-do', function( data ){
+      
+      if !(data) { return; }
+
+      // get instantiated component first
+      // component = _getComponent( data.type );
+      // if component ...
+      // component[ data.action ]();
+
     });
 
   });
