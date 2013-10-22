@@ -71,17 +71,19 @@ function _getNewComponent( componentType, options ){
   }
 }
 
-function do_default( data ){
-  // hardc0de: every kind of component should have a do_default action
-  component.clear();
-  component.print( '>> ' );
-  component.setCursor( 0, 1 );
-  component.print( data );
-}
+
 
 board.on('ready', function() {
 
-  // component = _create( 'lcd' );
+  // Component default functionality (hardcoded for lcd shield)
+  function do_default( component, data ){
+    if (!component) { return; }
+    // hardc0de: every kind of component should have a do_default action
+    component.clear();
+    component.print( '>> ' );
+    component.setCursor( 0, 1 );
+    component.print( data );
+  }
 
   io.sockets.on('connection', function( socket ){
 
@@ -106,14 +108,19 @@ board.on('ready', function() {
       component.on( 'ready', function(){ socket.emit( 'plumaduino:component_ready', {componentType: type} ); } );
     });
 
-    socket.on('plumaduino:execute_default', function( data ){
-      do_default( data );
-    });
+    // socket.on('plumaduino:execute_default', function( data ){
+    //   do_default( data );
+    // });
 
-    socket.on('plumaduino:component-do', function( data ){
-      
-      if !(data) { return; }
+    socket.on('plumaduino:component_do', function( data ){
 
+      if (!data) { return; }
+
+      // hardc0de
+      var params = ( data.params ) ? data.params : {};
+      do_default( component, params );
+
+      // TODO:
       // get instantiated component first
       // component = _getComponent( data.type );
       // if component ...
