@@ -83,6 +83,9 @@ board.on('ready', function() {
     component.print( '>> ' );
     component.setCursor( 0, 1 );
     component.print( data );
+    setTimeout(function(){
+      component.clear();
+    }, 3000);
   }
 
   io.sockets.on('connection', function( socket ){
