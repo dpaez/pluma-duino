@@ -62,6 +62,9 @@ function _getNewComponent( componentType, options ){
     case 'motor':
       return new five.Motor( options );
       break;
+    case 'servo':
+      return new five.Servo( options );
+      break;
     case 'lcd':
       return new five.LCD( options );
       break;
@@ -76,7 +79,7 @@ function _getNewComponent( componentType, options ){
 board.on('ready', function() {
 
   // Component default functionality (hardcoded for lcd shield)
-  function do_default( component, data ){
+  function do_lcd( component, data ){
     if (!component) { return; }
     // hardc0de: every kind of component should have a do_default action
     component.clear();
@@ -86,6 +89,17 @@ board.on('ready', function() {
     setTimeout(function(){
       component.clear();
     }, 3000);
+  }
+
+  function do_servo( component, data ){
+    if (!component) { return; }
+
+    component.sweep();
+
+    board.wait(5000, function(){
+      component.stop();
+      component.center();
+    }); 
   }
 
   io.sockets.on('connection', function( socket ){
@@ -99,29 +113,37 @@ board.on('ready', function() {
       _boardSetup( board, { pinMode: {10: [five.Pin.OUTPUT, five.Pin.INPUT]} } );
     });
 
-    socket.on('plumaduino:create_component', function( type ){
-      var options = {
-        pins: [ 8, 9, 4, 5, 6, 7 ],
-        rows: 2,
-        cols: 16,
-      };
+    socket.on('plumaduino:create_component', function( data ){
+      // DEPRECATED
+      // var options = {
+      //   pins: [ 8, 9, 4, 5, 6, 7 ],
+      //   rows: 2,
+      //   cols: 16,
+      // };
+      if ( !data ) { return; }
 
-      component = _getNewComponent( type, options );
+      component = _getNewComponent( data.type, data.options );
 
-      component.on( 'ready', function(){ socket.emit( 'plumaduino:component_ready', {componentType: type} ); } );
+      component.on( 'ready', function(){ socket.emit( 'plumaduino:component_ready', {componentType: data.type} ); } );
     });
-
-    // socket.on('plumaduino:execute_default', function( data ){
-    //   do_default( data );
-    // });
 
     socket.on('plumaduino:component_do', function( data ){
 
       if (!data) { return; }
 
-      // hardc0de
       var params = ( data.params ) ? data.params : {};
-      do_default( component, params );
+
+      // Check TODO. If we have more than 1 component enabled this wont work!
+      switch( data.type ){
+        case 'lcd':
+          do_lcd( component, params );  
+          break;
+        case 'servo':
+          do_servo( component, params );
+          break;
+        default:
+          break;
+      }     
 
       // TODO:
       // get instantiated component first
