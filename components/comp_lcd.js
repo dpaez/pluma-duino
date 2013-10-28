@@ -1,8 +1,9 @@
-module.exports = exports = CompLCD;
+var genericComponent = require( '../lib/abstractComponent' );
+function AbstractComponent( options ){
 
-function CompLCD( options ){
-  // create J5 LCD module here _inside_
-  
-  // check: https://github.com/visionmedia/express/blob/master/lib/view.js
 }
+
+AbstractComponent.prototype.getComponentType = function(){
+  return this.componentType;
+};
 
