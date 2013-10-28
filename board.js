@@ -78,6 +78,7 @@ function _getNewComponent( componentType, options ){
 
 board.on('ready', function() {
 
+  // DEPRECATED
   // Component default functionality (hardcoded for lcd shield)
   function do_lcd( component, data ){
     if (!component) { return; }
@@ -91,6 +92,7 @@ board.on('ready', function() {
     }, 3000);
   }
 
+  // DEPRECATED
   function do_servo( component, data ){
     if (!component) { return; }
 
@@ -109,19 +111,17 @@ board.on('ready', function() {
     });
 
     socket.on('plumaduino:board_setup', function( config ){
+      // DEPRECATED
       // hardc0de: testing purposes only
       _boardSetup( board, { pinMode: {10: [five.Pin.OUTPUT, five.Pin.INPUT]} } );
     });
 
     socket.on('plumaduino:create_component', function( data ){
-      // DEPRECATED
-      // var options = {
-      //   pins: [ 8, 9, 4, 5, 6, 7 ],
-      //   rows: 2,
-      //   cols: 16,
-      // };
+
       if ( !data ) { return; }
 
+      // NEW:
+      // component = monster.getComponent( data.type, data.options );
       component = _getNewComponent( data.type, data.options );
 
       component.on( 'ready', function(){ socket.emit( 'plumaduino:component_ready', {componentType: data.type} ); } );
@@ -150,6 +150,9 @@ board.on('ready', function() {
       // component = _getComponent( data.type );
       // if component ...
       // component[ data.action ]();
+      
+      // NEW:
+      // monster.do( data.type, data.action, data.params );
 
     });
 
