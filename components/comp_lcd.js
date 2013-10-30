@@ -21,11 +21,13 @@ var LCDShield = function(){
   var _create = function( options ){
     if ( !options ) { return; }
 
-    _component = new five.lcd({
+    _component = new five.LCD({
       pins: options.pins,
       rows: options.rows,
       cols: options.cols,
     });
+
+    return this;
   };
 
   var _defaultAction = function( data ){
@@ -62,31 +64,32 @@ var LCDShield = function(){
     _preStart( options );
     _create( options );
     //_postStart();
+    return this;
   };
 
   // TODO: This can and must be better done.
-  this.componentType = _componentType;
-  this.componentActions = _componentActions;
+  // this.componentType = _componentType;
+  // this.componentActions = _componentActions;
 
-  this.prototype = {
-    createComponent: publicCreate,
-    defaultAction: _defaultAction,
-    getComponentType: _getComponentType,
-    getComponentActions: _getComponentActions,
-    getComponent: _getComponent,
-  };
-
-  return this;
-
-  // return {
-  //   componentType: _componentType,
-  //   componentActions : _componentActions,
+  // this.prototype = {
   //   createComponent: publicCreate,
   //   defaultAction: _defaultAction,
   //   getComponentType: _getComponentType,
   //   getComponentActions: _getComponentActions,
   //   getComponent: _getComponent,
   // };
+
+  // return this;
+
+  return {
+    componentType: _componentType,
+    componentActions : _componentActions,
+    createComponent: publicCreate,
+    defaultAction: _defaultAction,
+    getComponentType: _getComponentType,
+    getComponentActions: _getComponentActions,
+    getComponent: _getComponent,
+  };
 
 };
 

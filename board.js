@@ -1,12 +1,15 @@
 'use strict';
 
-var five = require('johnny-five'),
+var util = require('util'),
+    five = require('johnny-five'),
     SIO = require('socket.io'),
     Builder = require('./lib/builder'),
     board = new five.Board(),
     io = SIO.listen(8080),
-    builder = new Builder(),
-    component;
+    _components = [],
+    _state = '',
+    component,
+    builder;
 
 // DEPRECATED
 function _boardSetup(board, options){
@@ -48,9 +51,24 @@ function _getNewComponent( componentType, options ){
   }
 }
 
+function _prepare( components ){
+
+  util.log( 'calling _prepare' );
+
+  if ( components ){
+    _components = components;  
+  }
+
+  _state = 'components_attached';
+  
+ }
 
 board.on('ready', function() {
-
+  
+  builder = new Builder({
+    ready: _prepare
+  });
+  
   // DEPRECATED
   // Component default functionality (hardcoded for lcd shield)
   function do_lcd( component, data ){
@@ -80,13 +98,17 @@ board.on('ready', function() {
   io.sockets.on('connection', function( socket ){
 
     // change this for a callback fn added to Builder creation or think for something else
-    builder.on('builder:ready', function( components ){
-      socket.emit( 'plumaduino:components_attached', components );
-    });
+    // builder.on('builder:ready', function( components ){
+    //   _components = components;
+    //   //socket.emit( 'plumaduino:components_attached', components );
+    // });
 
     socket.on('plumaduino:board_status', function(){
       // stupid app/board syncro event
       socket.emit( 'plumaduino:board_ready' );
+      if ( _state === 'components_attached' ){
+        socket.emit( 'plumaduino:components_attached', _components );
+      }
     });
 
     // DEPRECATED
@@ -103,35 +125,30 @@ board.on('ready', function() {
       component = builder.getComponent( data.type, data.options );
       // component = _getNewComponent( data.type, data.options );
 
-      component.on( 'ready', function(){ socket.emit( 'plumaduino:component_ready', {componentType: data.type} ); } );
+      var componentInstance = component.getComponent();
+      componentInstance.on( 'ready', function(){ socket.emit( 'plumaduino:component_ready', {componentType: data.type} ); } );
     });
 
     socket.on('plumaduino:component_do', function( data ){
 
       if (!data) { return; }
 
-      var params = ( data.params ) ? data.params : {};
+      data.params = ( data.params ) ? data.params : {};
 
       // Check TODO. If we have more than 1 component enabled this wont work!
-      switch( data.type ){
-        case 'lcd':
-          do_lcd( component, params );
-          break;
-        case 'servo':
-          do_servo( component, params );
-          break;
-        default:
-          break;
-      }
-
-      // TODO:
-      // get instantiated component first
-      // component = _getComponent( data.type );
-      // if component ...
-      // component[ data.action ]();
+      // switch( data.type ){
+      //   case 'lcd':
+      //     do_lcd( component, params );
+      //     break;
+      //   case 'servo':
+      //     do_servo( component, params );
+      //     break;
+      //   default:
+      //     break;
+      // }
 
       // NEW:
-      // monster.do( data.type, data.action, data.params );
+      builder.do( data.type, data.action, data.params );
 
     });
 
