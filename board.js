@@ -1,11 +1,14 @@
 'use strict';
 
 var five = require('johnny-five'),
-    sio = require('socket.io'),
+    SIO = require('socket.io'),
+    Builder = require('./lib/builder'),
     board = new five.Board(),
-    io = sio.listen(8080),
+    io = SIO.listen(8080),
+    builder = new Builder(),
     component;
 
+// DEPRECATED
 function _boardSetup(board, options){
   // pinMode setup
   if ( (options.pinMode) && (typeof options.pinMode === 'object') ){
@@ -26,36 +29,7 @@ function _boardSetup(board, options){
   // ...
 }
 
-/*
-  This should be part of a different module, like board.types.js
- */
-var boardTypes = {
-  'motor': function(){
-    return five.Motor();
-  },
-  'servo': function(){
-    return five.Servo();
-  },
-  'led': function(){
-    return five.Led();
-  },
-  'lcd': function(){
-    return five.LCD();
-  }
-};
-
-/**
- * [_create Create an Arduino new component wich will be attached to a board instance.]
- * @param  {String} type [a valid component type]
- * @return {Object}      [An Arduino component instance. ]
- */
-function _create( componentType, options ){
-  if ( boardTypes.hasOwnProperty(componentType) ){
-    return new boardTypes[componentType]( options );
-  }
-  return undefined;
-}
-
+// DEPRECATED
 function _getNewComponent( componentType, options ){
   options = options || {};
   switch( componentType ){
@@ -73,7 +47,6 @@ function _getNewComponent( componentType, options ){
       break;
   }
 }
-
 
 
 board.on('ready', function() {
@@ -101,17 +74,23 @@ board.on('ready', function() {
     board.wait(5000, function(){
       component.stop();
       component.center();
-    }); 
+    });
   }
 
   io.sockets.on('connection', function( socket ){
 
+    // change this for a callback fn added to Builder creation or think for something else
+    builder.on('builder:ready', function( components ){
+      socket.emit( 'plumaduino:components_attached', components );
+    });
+
     socket.on('plumaduino:board_status', function(){
+      // stupid app/board syncro event
       socket.emit( 'plumaduino:board_ready' );
     });
 
+    // DEPRECATED
     socket.on('plumaduino:board_setup', function( config ){
-      // DEPRECATED
       // hardc0de: testing purposes only
       _boardSetup( board, { pinMode: {10: [five.Pin.OUTPUT, five.Pin.INPUT]} } );
     });
@@ -121,8 +100,8 @@ board.on('ready', function() {
       if ( !data ) { return; }
 
       // NEW:
-      // component = monster.getComponent( data.type, data.options );
-      component = _getNewComponent( data.type, data.options );
+      component = builder.getComponent( data.type, data.options );
+      // component = _getNewComponent( data.type, data.options );
 
       component.on( 'ready', function(){ socket.emit( 'plumaduino:component_ready', {componentType: data.type} ); } );
     });
@@ -136,21 +115,21 @@ board.on('ready', function() {
       // Check TODO. If we have more than 1 component enabled this wont work!
       switch( data.type ){
         case 'lcd':
-          do_lcd( component, params );  
+          do_lcd( component, params );
           break;
         case 'servo':
           do_servo( component, params );
           break;
         default:
           break;
-      }     
+      }
 
       // TODO:
       // get instantiated component first
       // component = _getComponent( data.type );
       // if component ...
       // component[ data.action ]();
-      
+
       // NEW:
       // monster.do( data.type, data.action, data.params );
 

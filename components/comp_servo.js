@@ -1,8 +1,8 @@
-var LCDShield = function(){
+var Servo = function(){
 
   var five = require('johnny-five'),
     _component = null,
-    _componentType = 'lcd',
+    _componentType = 'servo',
     _componentActions = 'defaultAction';
 
   /**
@@ -11,35 +11,22 @@ var LCDShield = function(){
    *
    */
   var _preStart = function( options ){
-    if ( !options.board ){ return; }
-
-    options.board.pinMode( 10, five.Pin.OUTPUT );
-    options.board.pinMode( 10, five.Pin.INPUT );
 
   };
 
   var _create = function( options ){
     if ( !options ) { return; }
 
-    _component = new five.lcd({
-      pins: options.pins,
-      rows: options.rows,
-      cols: options.cols,
+    _component = new five.servo({
+      pin: options.pin,
     });
   };
 
   var _defaultAction = function( data ){
     if (!_component) { return; }
 
-    data = data || '1,2,3...';
+    _component.move( 90 );
 
-    _component.clear();
-    _component.print( '>> ' );
-    _component.setCursor( 0, 1 );
-    _component.print( data );
-    setTimeout(function(){
-      _component.clear();
-    }, 3000);
   };
 
   var _getComponentType = function(){
@@ -78,6 +65,7 @@ var LCDShield = function(){
 
   return this;
 
+  // TODO: create a wrapper object so these comp_* could inherit from and define on it those (below) common actions
   // return {
   //   componentType: _componentType,
   //   componentActions : _componentActions,
@@ -90,18 +78,4 @@ var LCDShield = function(){
 
 };
 
-module.exports = new LCDShield();
-
-// var lsd = require('./components/comp_lcd');
-// var l.... = lsd.create( opts );
-// inside board...
-  // l.defaultAction();
-
-// VS
-//
-// var LSD = require('./components/comp_lcd');
-// var lcd = new LSD( opts );
-// inside board...
-  // l.defaultAction();
-
-
+module.exports = new Servo();
