@@ -20,14 +20,14 @@ var Servo = function(){
     _component = new five.Servo({
       pin: options.pin,
     });
-    
+
     return this;
   };
 
   var _defaultAction = function( data ){
     if (!_component) { return; }
-
-    _component.move( 90 );
+    data = data || 90;
+    _component.move( data );
 
   };
 
