@@ -27,7 +27,12 @@ var Servo = function(){
   var _defaultAction = function( data ){
     if (!_component) { return; }
     data = data || 90;
+
     _component.move( data );
+
+    setTimeout(function(){
+      _component.center();
+    },2000);
 
   };
 
