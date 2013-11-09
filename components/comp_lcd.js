@@ -1,3 +1,4 @@
+'use strict';
 var LCDShield = function(){
 
   var five = require('johnny-five'),
@@ -62,9 +63,9 @@ var LCDShield = function(){
 
   var publicCreate = function( options ){
     _preStart( options );
-    _create( options );
+    var instance = _create( options );
     //_postStart();
-    return this;
+    return instance;
   };
 
   // TODO: This can and must be better done.

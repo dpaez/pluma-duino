@@ -4,8 +4,9 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "johnny-five": "~0.7.3",
-    "socket.io": "latest"
+    "johnny-five": "~0.7.x",
+    "socket.io": "0.9.x",
+    "hat": "0.0.3"
   },
   "devDependencies": {
     "npmlog": "0.0.6"
