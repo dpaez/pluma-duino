@@ -46,7 +46,7 @@ board.on('ready', function() {
         socket.emit( 'plumaduino:components_attached', _components );
       }else{
         // retry with interval?
-        socket.emit( 'plumaduino:components_not_attachedx' );
+        socket.emit( 'plumaduino:components_not_attached' );
       }
     });
 
@@ -56,8 +56,6 @@ board.on('ready', function() {
 
       var component = builder.getComponent( data.type, data.options, data.componentID );
 
-      // DEPRECATED
-      //componentInstance.on( 'ready', function(){ socket.emit( 'plumaduino:component_ready', {componentType: data.type} ); } );
     });
 
     socket.on('plumaduino:component_do', function( data ){
