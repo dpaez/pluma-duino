@@ -72,7 +72,9 @@ board.on('ready', function() {
     socket.on('plumaduino:update_component', function( data ){
       if ( !data ) { return; }
 
-      util.log( data );
+      util.log( data.componentID );
+      util.log( data.componentType );
+      util.log( data.data );
       builder.setFilters( data.componentID, data.componentType, data.data );
 
     });
