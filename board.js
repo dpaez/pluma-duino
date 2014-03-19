@@ -1,6 +1,7 @@
 'use strict';
 
 var util = require('util'),
+    es6 = require("es6-collections"),
     five = require('johnny-five'),
     SIO = require('socket.io'),
     Builder = require('./lib/builder'),
@@ -60,11 +61,19 @@ board.on('ready', function() {
 
     socket.on('plumaduino:component_do', function( data ){
 
-      if (!data) { return; }
+      if ( !data ) { return; }
 
       data.params = data.params || {};
 
       builder.do( data.componentID, data.componentType, data.action, data.params );
+
+    });
+
+    socket.on('plumaduino:update_component', function( data ){
+      if ( !data ) { return; }
+
+      util.log( data );
+      builder.setFilters( data.componentID, data.componentType, data.data );
 
     });
 
