@@ -1,12 +1,12 @@
 'use strict';
 
-var util = require('util'),
-    es6 = require("es6-collections"),
-    five = require('johnny-five'),
-    SIO = require('socket.io'),
-    Builder = require('./lib/builder'),
+var util = require( 'util' ),
+    es6 = require( 'es6-collections' ),
+    five = require( 'johnny-five' ),
+    SIO = require( 'socket.io' ),
+    Builder = require( './lib/builder' ),
     board = new five.Board(),
-    io = SIO.listen(8080),
+    io = SIO.listen( 8080 ),
     _components = [],
     _state = '',
     builder;
@@ -72,9 +72,6 @@ board.on('ready', function() {
     socket.on('plumaduino:update_component', function( data ){
       if ( !data ) { return; }
 
-      util.log( data.componentID );
-      util.log( data.componentType );
-      util.log( data.data );
       builder.setFilters( data.componentID, data.componentType, data.data );
 
     });

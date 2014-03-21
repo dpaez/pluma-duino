@@ -27,53 +27,6 @@ var Servo = function(){
     return _component;
   };
 
-  /**
-   * [_preAction description]
-   * @param  {[type]} componentInstance [REQUIRED]
-   * @param  {[type]} data              [REQUIRED]
-   * @param  {[type]} filters           [OPTIONAL]
-   * @param  {[type]} _defaultAction    [NEXT FN]
-   * @return {[type]}                   [description]
-   */
-  var _preAction = function( componentInstance, data, filters, _defaultAction ){
-
-    filters = filters || {};
-
-    if ( !filters ){
-      _defaultAction(componentInstance, data, filters);
-    }
-
-    if ( filters.instantFilter ){
-      setTimeout(function(){}, filters.instantFilter );
-    }
-
-    if ( filters.powerFilter ){
-      console.log( 'TODO: adjust power value to: ', filters.powerFilter );
-    }
-
-    if ( filters.continousFilter ){
-      _interval = setInterval( _defaultAction(componentInstance, data, filters), filters.continousFilter );
-    }
-
-    if ( filters.discreteFilter ){
-      _defaultAction(componentInstance, data, filters);
-    }
-
-    return;
-  };
-
-
-  /**
-   * [_action description]
-   * @param  {[type]} componentInstance [REQUIRED]
-   * @param  {[type]} data              [REQUIRED]
-   * @param  {[type]} filters           [OPTIONAL]
-   * @return {[type]}                   [description]
-   */
-  var _action = function( componentInstance, data, filters ){
-      _preAction( componentInstance, data, filters, _defaultAction );
-  };
-
   var _defaultAction = function( componentInstance, data ){
     if ( !componentInstance ) { return; }
     data = data || 90;
@@ -84,6 +37,53 @@ var Servo = function(){
       componentInstance.center();
     },2000);
 
+  };
+
+  /**
+   * [_preAction description]
+   * @param  {[type]} componentInstance [REQUIRED]
+   * @param  {[type]} data              [REQUIRED]
+   * @param  {[type]} filters           [OPTIONAL]
+   * @param  {[type]} _defaultAction    [NEXT FN]
+   * @return {[type]}                   [description]
+   */
+  var _preAction = function( componentInstance, data, filters, _defaultAction ){
+
+    if ( !filters ){
+      _defaultAction(componentInstance, data);
+    }
+
+    if ( filters.instantFilter ){
+      setTimeout( function(){_defaultAction( componentInstance, data )}, (Number(filters.instantFilter) * 1000) );
+      return;
+    }
+
+    if ( filters.powerFilter ){
+      console.log( 'TODO: adjust power value to: ', filters.powerFilter );
+      return;
+    }
+
+    if ( filters.continousFilter ){
+      _interval = setInterval( function(){_defaultAction(componentInstance, data)}, (Number(filters.continousFilter) * 1000));
+      return;
+    }
+
+    if ( filters.discreteFilter ){
+      _defaultAction(componentInstance, data);
+    }
+
+    return;
+  };
+
+  /**
+   * [_action description]
+   * @param  {[type]} componentInstance [REQUIRED]
+   * @param  {[type]} data              [REQUIRED]
+   * @param  {[type]} filters           [OPTIONAL]
+   * @return {[type]}                   [description]
+   */
+  var _action = function( componentInstance, data, filters ){
+    _preAction( componentInstance, data, filters, _defaultAction );
   };
 
   var _stop = function( componentInstance, data, filters ){
