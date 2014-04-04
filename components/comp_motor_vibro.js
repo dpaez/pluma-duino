@@ -2,9 +2,11 @@
 var Vibro = function(){
 
   var five = require('johnny-five'),
+    log = require('npmlog'),
     _component = null,
     _componentType = 'vibro',
-    _componentActions = 'defaultAction';
+    _componentActions = 'defaultAction',
+    _interval;
 
   var _preStart = function( options ){
 
@@ -20,15 +22,92 @@ var Vibro = function(){
     return _component;
   };
 
-  var _defaultAction = function( componentInstance, data ){
+  /**
+   * [_preAction prepare parameters for _defaultAction fn]
+   * @param  {[type]} componentInstance [REQUIRED]
+   * @param  {[type]} data              [REQUIRED]
+   * @param  {[type]} filters           [OPTIONAL]
+   * @param  {[type]} _defaultAction    [NEXT FN]
+   * @return {[type]}                   [description]
+   */
+  var _preAction = function( componentInstance, data, filters, _defaultAction ){
+    var instant, power, regular;
+
+    if ( !filters ){
+      _defaultAction(componentInstance, data);
+      return;
+    }
+
+    if ( filters.instantFilter ){
+      log.info( '\t>>', 'Delay set to: %s \n', filters.instantFilter );
+      instant = filters.instantFilter;
+      //setTimeout( function(){_defaultAction( componentInstance, data )}, (Number(filters.instantFilter) * 1000) );
+    }
+
+    if ( filters.powerFilter ){
+      log.info( '\t>>', 'Power speed set to: %s \n', filters.powerFilter );
+      power = filters.powerFilter;
+      //_defaultAction(componentInstance, data, filters.powerFilter);
+    }
+
+    if ( filters.continousFilter ){
+      log.info( '\t>>', 'Continous is enabled.\n' );
+      regular = true;
+      //_interval = setInterval( function(){_defaultAction(componentInstance, data)}, (Number(filters.continousFilter) * 1000));
+    }
+
+    if ( filters.discreteFilter ){
+      log.info( '\t>>', 'Discrete is enabled.\n' );
+      regular = false;
+      //_defaultAction(componentInstance, data);
+    }
+    _defaultAction( componentInstance, data, instant, power, regular );
+  };
+
+  /**
+   * [_action description]
+   * @param  {[type]} componentInstance [REQUIRED]
+   * @param  {[type]} data              [REQUIRED]
+   * @param  {[type]} filters           [OPTIONAL]
+   * @return {[type]}                   [description]
+   */
+  var _action = function( componentInstance, data, filters ){
+    _preAction( componentInstance, data, filters, _defaultAction );
+  };
+
+
+  var _defaultAction = function( componentInstance, data, instant, power, regular ){
     if ( !componentInstance ) { return; }
 
-    componentInstance.start();
+    // This value should be passed by the user in the future
+    var regularValue = 3000; // 3 seconds delay as a default
 
-    // Demonstrate motor stop in 2 seconds
+    // default values
+    instant = instant || 0;
+    power = power || undefined;
+    regular = regular || false;
+
+    if ( regular ){
+      _interval = setInterval( function(){
+        setTimeout(function(){ componentInstance.start( Number(power) ) }, (instant * 1000))
+      }, regularValue );
+    }else{
+      setTimeout( function(){ componentInstance.start( Number(power) ) }, (Number(instant) * 1000) );
+    }
+
+    // Demonstrate motor working... Stop in 2 seconds
     setTimeout(function(){
       componentInstance.stop();
     },2000)
+  };
+
+  var _stop = function( componentInstance, data, filters ){
+
+    filters = filters || {};
+
+    if ( filters.continousFilter ){
+      clearInterval( _interval );
+    }
   };
 
 
@@ -55,7 +134,8 @@ var Vibro = function(){
     componentType: _componentType,
     componentActions : _componentActions,
     createComponent: publicCreate,
-    defaultAction: _defaultAction,
+    defaultAction: _action,
+    stop: _stop,
     getComponentType: _getComponentType,
     getComponentActions: _getComponentActions,
   };
