@@ -15,9 +15,15 @@ var Vibro = function(){
   var _create = function( options ){
     if ( !options ) { return; }
 
-    _component = new five.Motor({
-      pin: options.pin,
-    });
+    var _options = {};
+    if ( options.pin ){
+      _options.pin = options.pin;
+    }else if ( options.pwm ){
+      _options.pins = options.pwm;
+      if ( options.dir ){ _options.dir = options.dir; }
+      if ( options.brake ){ _options.brake = options.brake; }
+    }
+    _component = new five.Motor( _options );
 
     return _component;
   };
@@ -82,23 +88,34 @@ var Vibro = function(){
     // This value should be passed by the user in the future
     var regularValue = 3000; // 3 seconds delay as a default
 
+    var scalePower = function( value, originalMin, originalMax, scaleMin, scaleMax ){
+      return ( (scaleMax - scaleMin) * (value - originalMin) ) / ( originalMax - originalMin );
+    }
     // default values
-    instant = instant || 0;
-    power = power || undefined;
+    instant = instant || 1;
+    //power = power || 5;
+    //power = scalePower( power, 1, 10, 60, 255 );
+
+    if ( power <= 60 ){
+      power = 60; // MIN - tested against vibro motors, values under 60 are not noticed.
+    }else if (power > 255){
+      power = 255; // MAX
+    }
+
     regular = regular || false;
 
     if ( regular ){
       _interval = setInterval( function(){
-        setTimeout(function(){ componentInstance.start( Number(power) ) }, (instant * 1000))
+        setTimeout(function(){ componentInstance.start( Number(power) ) }, ( Number(instant) * 1000 ))
       }, regularValue );
     }else{
-      setTimeout( function(){ componentInstance.start( Number(power) ) }, (Number(instant) * 1000) );
+      setTimeout( function(){ componentInstance.start( Number(power) ) }, ( Number(instant) * 1000 ));
+      // Demonstrate motor working... Stop in 2 seconds
+      setTimeout(function(){
+        componentInstance.stop();
+      }, 2000 );
     }
 
-    // Demonstrate motor working... Stop in 2 seconds
-    setTimeout(function(){
-      componentInstance.stop();
-    },2000)
   };
 
   var _stop = function( componentInstance, data, filters ){

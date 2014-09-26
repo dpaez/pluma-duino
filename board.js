@@ -65,7 +65,7 @@ board.on('ready', function() {
 
       data.params = data.params || {};
 
-      builder.do( data.componentID, data.componentType, data.action, data.params );
+      builder.do( data.componentID, data.componentType, data.action, data.params, data.filters );
 
     });
 
